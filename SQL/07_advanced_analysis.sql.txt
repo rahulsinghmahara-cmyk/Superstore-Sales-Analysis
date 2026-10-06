@@ -1,0 +1,160 @@
+-- SUPERSTORE SALES ANALYSIS
+-- Advanced Analysis
+
+-- 1. Top 3 Customers by Sales Within Each Region
+WITH customer_sales AS (
+    SELECT
+        region,
+        customer_id,
+        customer_name,
+        SUM(sales) AS total_sales
+    FROM orders
+    GROUP BY region, customer_id, customer_name
+),
+ranked_customers AS (
+    SELECT
+        region,
+        customer_id,
+        customer_name,
+        ROUND(total_sales, 2) AS total_sales,
+        RANK() OVER (
+            PARTITION BY region
+            ORDER BY total_sales DESC
+        ) AS sales_rank
+    FROM customer_sales
+)
+SELECT
+    region,
+    customer_id,
+    customer_name,
+    total_sales,
+    sales_rank
+FROM ranked_customers
+WHERE sales_rank <= 3
+ORDER BY region, sales_rank;
+
+
+-- 2. Top 5 Subcategories by Profit
+WITH subcategory_profit AS (
+    SELECT
+        sub_category,
+        SUM(profit) AS total_profit
+    FROM orders
+    GROUP BY sub_category
+),
+ranked_subcategories AS (
+    SELECT
+        sub_category,
+        ROUND(total_profit, 2) AS total_profit,
+        RANK() OVER (
+            ORDER BY total_profit DESC
+        ) AS profit_rank
+    FROM subcategory_profit
+)
+SELECT
+    sub_category,
+    total_profit,
+    profit_rank
+FROM ranked_subcategories
+WHERE profit_rank <= 5
+ORDER BY profit_rank;
+
+
+-- 3. Customer Sales as Percentage of Overall Sales
+WITH customer_sales AS (
+    SELECT
+        customer_id,
+        customer_name,
+        SUM(sales) AS total_sales
+    FROM orders
+    GROUP BY customer_id, customer_name
+)
+SELECT
+    customer_id,
+    customer_name,
+    ROUND(total_sales, 2) AS total_sales,
+    ROUND(
+        total_sales /
+        NULLIF((SELECT SUM(sales) FROM orders), 0) * 100,
+        2
+    ) AS sales_percentage
+FROM customer_sales
+ORDER BY total_sales DESC;
+
+
+-- 4. Profit Margin by Subcategory
+SELECT
+    sub_category,
+    ROUND(SUM(sales), 2) AS total_sales,
+    ROUND(SUM(profit), 2) AS total_profit,
+    ROUND(
+        SUM(profit) /
+        NULLIF(SUM(sales), 0) * 100,
+        2
+    ) AS profit_margin_percent
+FROM orders
+GROUP BY sub_category
+ORDER BY profit_margin_percent DESC;
+
+
+-- 5. Average Profit by Discount Level
+SELECT
+    CASE
+        WHEN discount < 0.10 THEN '0-10%'
+        WHEN discount < 0.20 THEN '10-20%'
+        WHEN discount < 0.30 THEN '20-30%'
+        WHEN discount < 0.40 THEN '30-40%'
+        WHEN discount < 0.50 THEN '40-50%'
+        ELSE '50%+'
+    END AS discount_bucket,
+    ROUND(AVG(profit), 2) AS average_profit
+FROM orders
+GROUP BY discount_bucket
+ORDER BY average_profit DESC;
+
+
+-- 6. Loss-Making Orders
+SELECT
+    order_id,
+    customer_id,
+    customer_name,
+    category,
+    sub_category,
+    sales,
+    discount,
+    profit
+FROM orders
+WHERE profit < 0
+ORDER BY profit ASC
+LIMIT 20;
+
+
+-- 7. Loss Rate by Subcategory
+SELECT
+    sub_category,
+    COUNT(*) AS total_rows,
+    COUNT(*) FILTER (WHERE profit < 0) AS loss_rows,
+    ROUND(
+        COUNT(*) FILTER (WHERE profit < 0)::numeric
+        / NULLIF(COUNT(*), 0) * 100,
+        2
+    ) AS loss_rate_percent
+FROM orders
+GROUP BY sub_category
+ORDER BY loss_rate_percent DESC;
+
+
+-- 8. Overall Customer Profitability
+SELECT
+    customer_id,
+    customer_name,
+    ROUND(SUM(sales), 2) AS total_sales,
+    ROUND(SUM(profit), 2) AS total_profit,
+    ROUND(
+        SUM(profit) /
+        NULLIF(SUM(sales), 0) * 100,
+        2
+    ) AS profit_margin_percent
+FROM orders
+GROUP BY customer_id, customer_name
+ORDER BY total_profit DESC;

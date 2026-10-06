@@ -1,0 +1,114 @@
+
+-- SUPERSTORE SALES ANALYSIS
+-- Customer Analysis
+
+-- 1. Total Sales by Customer
+SELECT
+    customer_id,
+    customer_name,
+    ROUND(SUM(sales), 2) AS total_sales
+FROM orders
+GROUP BY customer_id, customer_name
+ORDER BY total_sales DESC;
+
+
+-- 2. Top 5 Customers by Sales
+SELECT
+    customer_id,
+    customer_name,
+    ROUND(SUM(sales), 2) AS total_sales
+FROM orders
+GROUP BY customer_id, customer_name
+ORDER BY total_sales DESC
+LIMIT 5;
+
+
+-- 3. Customers with More Than 10 Orders
+SELECT
+    customer_id,
+    customer_name,
+    COUNT(DISTINCT order_id) AS total_orders
+FROM orders
+GROUP BY customer_id, customer_name
+HAVING COUNT(DISTINCT order_id) > 10
+ORDER BY total_orders DESC;
+
+
+-- 4. Customers with Average Sales Above 500
+SELECT
+    customer_id,
+    customer_name,
+    ROUND(AVG(sales), 2) AS average_sales
+FROM orders
+GROUP BY customer_id, customer_name
+HAVING AVG(sales) > 500
+ORDER BY average_sales DESC;
+
+
+-- 5. Customer Sales by Region
+SELECT
+    region,
+    customer_id,
+    customer_name,
+    ROUND(SUM(sales), 2) AS total_sales
+FROM orders
+GROUP BY region, customer_id, customer_name
+ORDER BY region, total_sales DESC;
+
+
+-- 6. Customer Sales as a Percentage of Overall Sales
+SELECT
+    customer_id,
+    customer_name,
+    ROUND(SUM(sales), 2) AS total_sales,
+    ROUND(
+        SUM(sales) /
+        (SELECT SUM(sales) FROM orders) * 100,
+        2
+    ) AS sales_percentage
+FROM orders
+GROUP BY customer_id, customer_name
+ORDER BY total_sales DESC;
+
+
+-- 7. Rank Customers by Total Sales
+WITH customer_sales AS (
+    SELECT
+        customer_id,
+        customer_name,
+        ROUND(SUM(sales), 2) AS total_sales
+    FROM orders
+    GROUP BY customer_id, customer_name
+)
+SELECT
+    customer_id,
+    customer_name,
+    total_sales,
+    RANK() OVER (
+        ORDER BY total_sales DESC
+    ) AS sales_rank
+FROM customer_sales
+ORDER BY sales_rank;
+
+
+-- 8. Rank Customers by Sales Within Each Region
+WITH customer_sales AS (
+    SELECT
+        region,
+        customer_id,
+        customer_name,
+        SUM(sales) AS total_sales
+    FROM orders
+    GROUP BY region, customer_id, customer_name
+)
+SELECT
+    region,
+    customer_id,
+    customer_name,
+    ROUND(total_sales, 2) AS total_sales,
+    RANK() OVER (
+        PARTITION BY region
+        ORDER BY total_sales DESC
+    ) AS region_rank
+FROM customer_sales
+ORDER BY region, region_rank;

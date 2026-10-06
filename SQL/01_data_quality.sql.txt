@@ -1,0 +1,55 @@
+-- SUPERSTORE SALES ANALYSIS
+-- Data Quality Checks
+
+-- 1. Check total number of rows
+SELECT COUNT(*) AS total_rows
+FROM orders;
+
+
+-- 2. Check for duplicate Order IDs
+SELECT
+    COUNT(*) AS total_rows,
+    COUNT(DISTINCT order_id) AS unique_orders
+FROM orders;
+
+
+-- 3. Check for NULL values in important columns
+SELECT
+    COUNT(*) FILTER (WHERE order_id IS NULL) AS null_order_id,
+    COUNT(*) FILTER (WHERE customer_id IS NULL) AS null_customer_id,
+    COUNT(*) FILTER (WHERE sales IS NULL) AS null_sales,
+    COUNT(*) FILTER (WHERE profit IS NULL) AS null_profit
+FROM orders;
+
+
+-- 4. Check the date range
+SELECT
+    MIN(order_date) AS earliest_order_date,
+    MAX(order_date) AS latest_order_date
+FROM orders;
+
+
+-- 5. Check the number of unique customers
+SELECT COUNT(DISTINCT customer_id) AS unique_customers
+FROM orders;
+
+
+-- 6. Check sales range
+SELECT
+    MIN(sales) AS minimum_sales,
+    MAX(sales) AS maximum_sales
+FROM orders;
+
+
+-- 7. Check quantity range
+SELECT
+    MIN(quantity) AS minimum_quantity,
+    MAX(quantity) AS maximum_quantity
+FROM orders;
+
+
+-- 8. Check profit range
+SELECT
+    MIN(profit) AS minimum_profit,
+    MAX(profit) AS maximum_profit
+FROM orders;

@@ -1,0 +1,83 @@
+
+-- SUPERSTORE SALES ANALYSIS
+-- Category & Subcategory Analysis
+
+
+-- 1. Sales by Category
+SELECT
+    category,
+    ROUND(SUM(sales), 2) AS total_sales
+FROM orders
+GROUP BY category
+ORDER BY total_sales DESC;
+
+
+-- 2. Profit by Category
+SELECT
+    category,
+    ROUND(SUM(profit), 2) AS total_profit
+FROM orders
+GROUP BY category
+ORDER BY total_profit DESC;
+
+
+-- 3. Sales and Profit by Category
+SELECT
+    category,
+    ROUND(SUM(sales), 2) AS total_sales,
+    ROUND(SUM(profit), 2) AS total_profit
+FROM orders
+GROUP BY category
+ORDER BY total_sales DESC;
+
+
+-- 4. Profit Margin by Category
+SELECT
+    category,
+    ROUND(
+        SUM(profit) / NULLIF(SUM(sales), 0) * 100,
+        2
+    ) AS profit_margin_percent
+FROM orders
+GROUP BY category
+ORDER BY profit_margin_percent DESC;
+
+
+-- 5. Subcategory Profit Analysis
+SELECT
+    sub_category,
+    ROUND(SUM(profit), 2) AS total_profit
+FROM orders
+GROUP BY sub_category
+ORDER BY total_profit DESC;
+
+
+-- 6. Top 5 Most Profitable Subcategories
+SELECT
+    sub_category,
+    ROUND(SUM(profit), 2) AS total_profit
+FROM orders
+GROUP BY sub_category
+ORDER BY total_profit DESC
+LIMIT 5;
+
+
+-- 7. Loss-Making Subcategories
+SELECT
+    sub_category,
+    ROUND(SUM(profit), 2) AS total_profit,
+    COUNT(*) AS loss_rows
+FROM orders
+WHERE profit < 0
+GROUP BY sub_category
+ORDER BY total_profit ASC;
+
+
+-- 8. Categories with Total Profit Above 50,000
+SELECT
+    category,
+    ROUND(SUM(profit), 2) AS total_profit
+FROM orders
+GROUP BY category
+HAVING SUM(profit) > 50000
+ORDER BY total_profit DESC;
